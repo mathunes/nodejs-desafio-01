@@ -18,7 +18,7 @@ function checksExistsUserAccount(request, response, next) {
   );
 
   if (!user) {
-    return response.status(400).json({ error: "User not found" });
+    return response.status(404).json({ error: "User not found" });
   }
 
   request.user = user;
@@ -46,7 +46,7 @@ app.post('/users', (request, response) => {
   
   users.push(user);
 
-  return response.status(200).send({name, username})
+  return response.status(201).send({name, username})
 });
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
@@ -58,7 +58,7 @@ app.get('/todos', checksExistsUserAccount, (request, response) => {
 
   const todos = user.todos;
 
-  return response.status(200).json(todos);
+  return response.status(201).json(todos);
 });
 
 app.post('/todos', checksExistsUserAccount, (request, response) => {
@@ -76,20 +76,60 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
 
   user.todos.push(todo);
 
-  return response.status(200).json(user.todos);
+  return response.status(201).json(user.todos);
 
 });
 
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+  const { user } = request;
+  
+  var position = (user.todos.findIndex((i) => {
+    return (i.id === request.params.id)
+  }));
+
+  if (position === -1) {
+    return response.status(404).json({error: "Task not found"});
+  }
+  
+  const { title, deadline } = request.body;
+
+  user.todos[position].title = title;
+  user.todos[position].deadline = deadline;
+
+  return response.status(201).json(user.todos[position]);
+
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+  const { user } = request;
+  
+  var position = (user.todos.findIndex((i) => {
+    return (i.id === request.params.id)
+  }));
+
+  if (position === -1) {
+    return response.status(404).json({error: "Task not found"});
+  }
+  
+  user.todos[position].done = true;
+
+  return response.status(201).json(user.todos[position]);
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+  const { user } = request;
+  
+  var position = (user.todos.findIndex((i) => {
+    return (i.id === request.params.id)
+  }));
+
+  if (position === -1) {
+    return response.status(404).json({error: "Task not found"});
+  }
+  
+  user.todos.splice(position, 1);
+
+  return response.status(201).json(user.todos);
 });
 
 module.exports = app;
